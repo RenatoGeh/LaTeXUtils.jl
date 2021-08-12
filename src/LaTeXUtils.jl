@@ -5,14 +5,14 @@ using Printf
 mutable struct Table
   T::Vector{String}
   M::Matrix
+  D::Vector{String}
 
-  function Table(T::Vector{String}, M::AbstractArray)::Table
+  function Table(T::Vector{String}, M::AbstractArray, D::Vector{String})::Table
     if M isa Vector
       n, m = length(M), length(M[1])
       data = [M[i][j] for i ∈ 1:n, j ∈ 1:m]
     else data = M end
-    display(M)
-    return new(T, data)
+    return new(T, data, D)
   end
 end
 export Table
@@ -24,8 +24,9 @@ function pushcolumn!(T::Table, X::AbstractArray, name::String)::Table
 end
 export pushcolumn!
 
-function pushrow!(T::Table, X::AbstractArray)::Table
+function pushrow!(T::Table, X::AbstractArray, dname::String)::Table
   T.M = cat(T.M, reshape(X, 1, :); dims = 1)
+  push!(T.D, dname)
   return T
 end
 export pushrow!
@@ -55,8 +56,10 @@ function Base.write(T::Table, path::String; highlight::Bool = true, kwargs...)
     for i ∈ 1:n, j ∈ 1:m R[i,P[i][j]] = j end
   end
   content = ""
+  for i ∈ 1:m-1 content *= "\\textbf{\\textsc{$(T.T[i])}} & " end
+  content *= "\\textbf{\\textsc{$(T.T[m])}}\\\\\n"
   for i ∈ 1:n
-    content *= @sprintf("\\textsc{%s}", T.T[i])
+    content *= @sprintf("\\textsc{%s}", T.D[i])
     for j ∈ 1:m
       if R[i,j] == 1 content *= @sprintf(" & \\textbf{%.2f}", T.M[i,j])
       elseif R[i,j] == 2 content *= @sprintf(" & \\underline{%.2f}", T.M[i,j])
