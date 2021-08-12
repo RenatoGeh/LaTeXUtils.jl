@@ -1,0 +1,7 @@
+name = "LaTeXUtils"
+uuid = "9bca00aa-f97d-4bd7-a524-463d07cfba61"
+authors = ["Renato Lui Geh <renatogeh@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
