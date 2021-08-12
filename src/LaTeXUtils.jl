@@ -30,6 +30,18 @@ function pushrow!(T::Table, X::AbstractArray)::Table
 end
 export pushrow!
 
+@inline Base.copy(T::Table)::Table = Table(copy(T.T), copy(T.M))
+@inline function Base.copy!(dst::Table, src::Table)::Table
+  dst.T, dst.M = copy(src.T), copy(src.M)
+  return dst
+end
+
+@inline function Base.append!(T::Table, S::Table)::Table
+  append!(T.T, S.T)
+  T.M = cat(T.M, S.M; dims = 2)
+  return T
+end
+
 @inline Base.getindex(T::Table, I::Int...) = getindex(T.M, I...)
 @inline Base.setindex!(T::Table, v, K...) = setindex!(T.M, v, K...)
 
@@ -49,7 +61,7 @@ function Base.write(T::Table, path::String; highlight::Bool = true, kwargs...)
       if R[i,j] == 1 content *= @sprintf(" & \\textbf{%.2f}", T.M[i,j])
       elseif R[i,j] == 2 content *= @sprintf(" & \\underline{%.2f}", T.M[i,j])
       elseif R[i,j] == 3 content *= @sprintf(" & \$|\$%.2f\$|\$", T.M[i,j])
-      else content *= @sprintf(" & %.2f", M[i,j]) end
+      else content *= @sprintf(" & %.2f", T.M[i,j]) end
     end
     content *= "\\\\\n"
   end
