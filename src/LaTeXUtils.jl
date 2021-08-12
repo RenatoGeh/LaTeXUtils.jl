@@ -2,7 +2,7 @@ module LaTeXUtils
 
 using Printf
 
-struct Table
+mutable struct Table
   T::Vector{String}
   M::Matrix
 
@@ -16,6 +16,19 @@ struct Table
   end
 end
 export Table
+
+function pushcolumn!(T::Table, X::AbstractArray, name::String)::Table
+  T.M = cat(T.M, X; dims = 2)
+  push!(T.T, name)
+  return T
+end
+export pushcolumn!
+
+function pushrow!(T::Table, X::AbstractArray)::Table
+  T.M = cat(T.M, reshape(X, 1, :); dims = 1)
+  return T
+end
+export pushrow!
 
 @inline Base.getindex(T::Table, I::Int...) = getindex(T.M, I...)
 @inline Base.setindex!(T::Table, v, K...) = setindex!(T.M, v, K...)
