@@ -31,9 +31,9 @@ function pushrow!(T::Table, X::AbstractArray, dname::String)::Table
 end
 export pushrow!
 
-@inline Base.copy(T::Table)::Table = Table(copy(T.T), copy(T.M))
+@inline Base.copy(T::Table)::Table = Table(copy(T.T), copy(T.M), copy(T.D))
 @inline function Base.copy!(dst::Table, src::Table)::Table
-  dst.T, dst.M = copy(src.T), copy(src.M)
+  dst.T, dst.M, dst.C = copy(src.T), copy(src.M), copy(src.D)
   return dst
 end
 
@@ -49,15 +49,15 @@ end
 function Base.write(T::Table, path::String; highlight::Bool = true, kwargs...)
   f = open(path, "w")
   n, m = size(T.M)
-  write(f, "\\begin{table}\n\\begin{tabular}{" * repeat("l|", m-1) * "l}\n")
+  write(f, "\\begin{table}\n\\begin{tabular}{" * repeat("l|", m) * "l}\n\\hline\n")
   if highlight
     P = [sortperm(T.M[i,:]; kwargs...) for i ∈ 1:n]
     R = Matrix(undef, n, m)
     for i ∈ 1:n, j ∈ 1:m R[i,P[i][j]] = j end
   end
-  content = ""
+  content = "\\textbf{Data} & "
   for i ∈ 1:m-1 content *= "\\textbf{\\textsc{$(T.T[i])}} & " end
-  content *= "\\textbf{\\textsc{$(T.T[m])}}\\\\\n"
+  content *= "\\textbf{\\textsc{$(T.T[m])}}\\\\\n\\hline\n"
   for i ∈ 1:n
     content *= @sprintf("\\textsc{%s}", T.D[i])
     for j ∈ 1:m
@@ -68,6 +68,11 @@ function Base.write(T::Table, path::String; highlight::Bool = true, kwargs...)
     end
     content *= "\\\\\n"
   end
+  pr, rr = sortperm(vec(sum(R; dims = 1))), Vector{Int}(undef, m)
+  for i ∈ 1:m rr[pr[i]] = i end
+  content *= "\\hline\n\\textbf{\\textsc{Rank}} "
+  for i ∈ 1:m content *= @sprintf("& %d ", rr[i]) end
+  content *= "\\\\\n\\hline\n"
   write(f, content)
   write(f, "\\end{tabular}\n\\end{table}\n")
   close(f)
